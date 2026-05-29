@@ -1,0 +1,359 @@
+@startuml
+title 1. Login / Registration
+
+autonumber
+skinparam shadowing true
+skinparam backgroundColor #FFFFFF
+
+skinparam actor {
+  BackgroundColor #F7F7F7
+  BorderColor #2D6A9F
+  FontColor #1F3B57
+}
+
+skinparam participant {
+  BackgroundColor #EEF6FF
+  BorderColor #2D6A9F
+  FontColor #1F3B57
+}
+
+skinparam database {
+  BackgroundColor #FFF9E8
+  BorderColor #C89B2D
+  FontColor #5A4617
+}
+
+skinparam sequence {
+  ArrowColor #2D6A9F
+  LifeLineBorderColor #2D6A9F
+  LifeLineBackgroundColor #F8FBFF
+  ParticipantBorderThickness 1
+  ParticipantBackgroundColor #EEF6FF
+  ParticipantFontColor #1F3B57
+  ActorBorderColor #2D6A9F
+  ActorBackgroundColor #F7F7F7
+  ActorFontColor #1F3B57
+  BoxBorderColor #2D6A9F
+  BoxBackgroundColor #F4F9FF
+  GroupBorderColor #2D6A9F
+  GroupBackgroundColor #F8FBFF
+  GroupHeaderFontColor #1F3B57
+  DividerBorderColor #2D6A9F
+  DividerBackgroundColor #EEF6FF
+  DividerFontColor #1F3B57
+  DelayFontColor #5C6F82
+  ResponseMessageBelowArrow true
+}
+
+actor "Registered User" as User
+participant "Frontend" as FE
+participant "AuthController" as AC
+participant "AuthService" as AS
+participant "UserRepository" as UR
+database "Database" as DB
+
+User -> FE : Open auth page
+FE --> User : Show login / registration form
+
+alt Login
+  User -> FE : Submit email + password
+  FE -> AC : POST /auth/login
+  activate AC
+  AC -> AS : authenticate(credentials)
+  activate AS
+  AS -> UR : findByEmail(email)
+  activate UR
+  UR -> DB : Select user
+  activate DB
+  DB --> UR : User record
+  deactivate DB
+  UR --> AS : User
+  deactivate UR
+
+  alt Valid credentials
+    AS --> AC : JWT / session
+    AC --> FE : 200 OK + token
+    FE --> User : Redirect to dashboard
+  else Invalid credentials
+    AS --> AC : Authentication failed
+    AC --> FE : 401 Unauthorized
+    FE --> User : Show error message
+  end
+
+  deactivate AS
+  deactivate AC
+else Registration
+  User -> FE : Submit registration form
+  FE -> AC : POST /auth/register
+  activate AC
+  AC -> AS : registerStudent() / registerTeacher()
+  activate AS
+  AS -> UR : existsByEmail(email)?
+  activate UR
+  UR -> DB : Check uniqueness
+  activate DB
+  DB --> UR : Exists / Not exists
+  deactivate DB
+  UR --> AS : Result
+  deactivate UR
+
+  alt Email available
+    AS -> UR : save(new user)
+    activate UR
+    UR -> DB : Insert user
+    activate DB
+    DB --> UR : Created user
+    deactivate DB
+    UR --> AS : User saved
+    deactivate UR
+    AS --> AC : Registration success
+    AC --> FE : 201 Created
+    FE --> User : Show success / redirect to login
+  else Email already used
+    AS --> AC : Registration rejected
+    AC --> FE : 409 Conflict
+    FE --> User : Show validation error
+  end
+
+  deactivate AS
+  deactivate AC
+end
+@enduml
+
+@startuml
+title 2. Open Learning: Search and Access Lessons
+
+autonumber
+skinparam shadowing true
+skinparam backgroundColor #FFFFFF
+
+skinparam actor {
+  BackgroundColor #F7F7F7
+  BorderColor #2D6A9F
+  FontColor #1F3B57
+}
+
+skinparam participant {
+  BackgroundColor #EEF6FF
+  BorderColor #2D6A9F
+  FontColor #1F3B57
+}
+
+skinparam database {
+  BackgroundColor #FFF9E8
+  BorderColor #C89B2D
+  FontColor #5A4617
+}
+
+skinparam sequence {
+  ArrowColor #2D6A9F
+  LifeLineBorderColor #2D6A9F
+  LifeLineBackgroundColor #F8FBFF
+  ParticipantBorderThickness 1
+  ParticipantBackgroundColor #EEF6FF
+  ParticipantFontColor #1F3B57
+  ActorBorderColor #2D6A9F
+  ActorBackgroundColor #F7F7F7
+  ActorFontColor #1F3B57
+  BoxBorderColor #2D6A9F
+  BoxBackgroundColor #F4F9FF
+  GroupBorderColor #2D6A9F
+  GroupBackgroundColor #F8FBFF
+  GroupHeaderFontColor #1F3B57
+  DividerBorderColor #2D6A9F
+  DividerBackgroundColor #EEF6FF
+  DividerFontColor #1F3B57
+  DelayFontColor #5C6F82
+  ResponseMessageBelowArrow true
+}
+
+actor User
+participant "Frontend" as FE
+participant "CatalogController" as CC
+participant "CatalogService" as CS
+participant "LessonRepository" as LR
+participant "ResourceRepository" as RR
+database "Database" as DB
+
+User -> FE : Search lessons / teachers / subjects
+FE -> CC : GET /catalog/search?q=...
+activate CC
+CC -> CS : search(query, filters)
+activate CS
+CS -> LR : findPublishedLessons(query)
+activate LR
+LR -> DB : Select open lessons
+activate DB
+DB --> LR : Matching lessons
+Deactivate DB
+LR --> CS : Lessons
+Deactivate LR
+CS --> CC : Search results
+CC --> FE : 200 OK + results
+Deactivate CS
+Deactivate CC
+FE --> User : Display searchable content
+
+User -> FE : Open lesson details
+FE -> CC : GET /lessons/{id}
+activate CC
+CC -> CS : getOpenLesson(id)
+activate CS
+CS -> LR : findOpenLessonById(id)
+activate LR
+LR -> DB : Load lesson
+activate DB
+DB --> LR : Lesson data
+Deactivate DB
+LR --> CS : Lesson
+Deactivate LR
+
+alt Lesson is public
+  CS -> RR : findResourcesByLesson(id)
+  activate RR
+  RR -> DB : Load resources
+  activate DB
+  DB --> RR : Resource list
+  deactivate DB
+  RR --> CS : Resources
+  deactivate RR
+  CS --> CC : Lesson details + resources
+  CC --> FE : 200 OK
+  FE --> User : Show open lesson
+else Lesson is restricted
+  CS --> CC : Access denied
+  CC --> FE : 403 Forbidden
+  FE --> User : Ask user to enroll or login
+end
+
+deactivate CS
+deactivate CC
+@enduml
+
+@startuml
+title 3. Organized Learning for Courses
+
+autonumber
+skinparam shadowing true
+skinparam backgroundColor #FFFFFF
+
+skinparam actor {
+  BackgroundColor #F7F7F7
+  BorderColor #2D6A9F
+  FontColor #1F3B57
+}
+
+skinparam participant {
+  BackgroundColor #EEF6FF
+  BorderColor #2D6A9F
+  FontColor #1F3B57
+}
+
+skinparam database {
+  BackgroundColor #FFF9E8
+  BorderColor #C89B2D
+  FontColor #5A4617
+}
+
+skinparam sequence {
+  ArrowColor #2D6A9F
+  LifeLineBorderColor #2D6A9F
+  LifeLineBackgroundColor #F8FBFF
+  ParticipantBorderThickness 1
+  ParticipantBackgroundColor #EEF6FF
+  ParticipantFontColor #1F3B57
+  ActorBorderColor #2D6A9F
+  ActorBackgroundColor #F7F7F7
+  ActorFontColor #1F3B57
+  BoxBorderColor #2D6A9F
+  BoxBackgroundColor #F4F9FF
+  GroupBorderColor #2D6A9F
+  GroupBackgroundColor #F8FBFF
+  GroupHeaderFontColor #1F3B57
+  DividerBorderColor #2D6A9F
+  DividerBackgroundColor #EEF6FF
+  DividerFontColor #1F3B57
+  DelayFontColor #5C6F82
+  ResponseMessageBelowArrow true
+}
+
+actor Student
+participant "Frontend" as FE
+participant "EnrollmentController" as EC
+participant "LearningService" as LS
+participant "CourseRepository" as CR
+participant "EnrollmentRepository" as ER
+participant "ProgressRepository" as PR
+database "Database" as DB
+
+Student -> FE : Enroll in a course
+FE -> EC : POST /courses/{id}/enroll
+activate EC
+EC -> LS : enroll(studentId, courseId)
+activate LS
+LS -> CR : findPublishedCourse(courseId)
+activate CR
+CR -> DB : Load course
+activate DB
+DB --> CR : Course
+Deactivate DB
+CR --> LS : Course
+Deactivate CR
+
+LS -> ER : existsEnrollment(studentId, courseId)
+activate ER
+ER -> DB : Check enrollment
+activate DB
+DB --> ER : Exists / Not exists
+Deactivate DB
+ER --> LS : Result
+Deactivate ER
+
+alt Enrollment allowed
+  LS -> ER : saveEnrollment(studentId, courseId)
+  activate ER
+  ER -> DB : Insert enrollment
+  activate DB
+  DB --> ER : Enrollment created
+  deactivate DB
+  ER --> LS : Enrollment
+  deactivate ER
+  LS -> PR : initializeProgress(studentId, courseId)
+  activate PR
+  PR -> DB : Create course progress
+  activate DB
+  DB --> PR : Progress initialized
+  deactivate DB
+  PR --> LS : Progress record
+  deactivate PR
+  LS --> EC : Enrollment success
+  EC --> FE : 201 Created
+  FE --> Student : Course added to my learning
+else Already enrolled or unavailable
+  LS --> EC : Enrollment denied
+  EC --> FE : 400 / 409
+  FE --> Student : Show enrollment message
+end
+
+deactivate LS
+deactivate EC
+
+Student -> FE : Continue learning
+FE -> EC : GET /me/enrollments/{courseId}/progress
+activate EC
+EC -> LS : getCourseProgress(studentId, courseId)
+activate LS
+LS -> PR : findProgress(studentId, courseId)
+activate PR
+PR -> DB : Load progress + completed lessons
+activate DB
+DB --> PR : Progress data
+Deactivate DB
+PR --> LS : Progress details
+Deactivate PR
+LS --> EC : Current progress
+EC --> FE : 200 OK + next lesson
+Deactivate LS
+Deactivate EC
+FE --> Student : Open next lesson / quiz
+@enduml

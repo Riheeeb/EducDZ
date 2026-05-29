@@ -1,0 +1,56 @@
+### Create a new teacher
+POST http://localhost:8080/api/v1/auth/register/teacher
+Content-Type: application/json
+
+{
+  "name": "teacher2",
+  "email": "profmath@gmail.com",
+  "password": "prof1234",
+  "confirmPassword": "prof1234",
+  "teacherSubjectId" : 6
+}
+
+### Login with teacher2 (egnoring enabled field for now)
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "profdemath@gmail.com",
+  "password": "prof1234"
+ 
+}
+
+### Create a new student
+POST http://localhost:8080/api/v1/auth/register/student
+Content-Type: application/json
+
+{
+  "name": "techstd",
+  "email": "sttechi@gmail.com",
+  "password": "student202",
+  "confirmPassword": "student202",
+  "studentLevel": "HIGH_SCHOOL",
+  "yearId": 7,
+  "streamTypeId": 3,
+  "substreamId": 20
+}
+
+### Global search (teachers by name, courses by title/description, lessons by title/content)
+GET http://localhost:8080/api/v1/search?q=math&limit=20
+
+### Published course by id (for "view course" from search)
+GET http://localhost:8080/api/v1/courses/1
+
+### Progress — dashboard stats (lessons completed, enrollments count, student points)
+GET http://localhost:8080/api/me/stats?studentId=1
+
+### Progress — mark lesson complete
+POST http://localhost:8080/api/v1/lessons/1/complete?studentId=1
+
+### Progress — course % and global %
+GET http://localhost:8080/api/v1/courses/1/progress?studentId=1
+GET http://localhost:8080/api/v1/students/1/progress
+
+### Continue learning (optional courseId)
+GET http://localhost:8080/api/v1/continue-learning?studentId=1
+GET http://localhost:8080/api/v1/continue-learning?studentId=1&courseId=1

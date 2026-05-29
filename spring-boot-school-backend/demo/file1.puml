@@ -1,0 +1,89 @@
+@startuml
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing true
+skinparam packageStyle folder
+skinparam linetype ortho
+
+skinparam rectangle {
+  BorderColor #181818
+  BackgroundColor #F1F8FF
+  shadowing true
+}
+
+skinparam package {
+  BorderColor #000000
+  BackgroundColor #FFFFFF
+  FontStyle bold
+  shadowing true
+}
+
+skinparam usecase {
+  BackgroundColor #E3F2FD
+  BorderColor #1E88E5
+  BorderThickness 0.5
+  FontColor #000000
+}
+
+skinparam actor {
+  BackgroundColor #BBDEFB
+  BorderColor #0D47A1
+  BorderThickness 0.5
+  FontColor #000000
+}
+
+actor Student
+
+rectangle "Student Space" {
+
+  package "Authentication" {
+    usecase "Register" as UC1
+    usecase "Login" as UC2
+  }
+
+  package "Learning" {
+    usecase "View Courses" as UC3
+    usecase "Enroll in Course" as UC4
+    usecase "Access Lessons" as UC5
+  }
+
+  package "Evaluation" {
+    usecase "Take Quiz" as UC7
+    usecase "Submit Quiz" as UC8
+  }
+
+  package "Progress & Rewards" {
+    usecase "Get Badges" as UC11
+    usecase "Earn Points" as UC10
+    usecase "View Progress" as UC9
+  }
+
+  package "Planner (Schedule)" {
+    usecase "View Schedule" as UC12
+    usecase "View Exams" as UC14
+    usecase "View Sessions" as UC13
+  }
+}
+
+Student --> UC1
+Student --> UC2
+Student --> UC3
+Student --> UC4
+Student --> UC5
+Student --> UC7
+Student --> UC9
+Student --> UC12
+
+UC4 --> UC2 : <<include>>
+UC5 --> UC2 : <<include>>
+UC7 --> UC2 : <<include>>
+UC7 --> UC8 : <<include>>
+UC9 --> UC2 : <<include>>
+UC12 --> UC2 : <<include>>
+UC12 --> UC13 : <<include>>
+UC12 --> UC14 : <<include>>
+
+UC8 ..> UC10 : <<extend>>
+UC10 ..> UC11 : <<extend>>
+
+@enduml

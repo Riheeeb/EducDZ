@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-schoolApplication<educationonline>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.educationonline.backend.schoolApplication",
+            "projectName": "educationonline",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

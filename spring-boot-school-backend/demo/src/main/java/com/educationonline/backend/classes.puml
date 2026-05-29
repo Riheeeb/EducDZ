@@ -1,0 +1,269 @@
+@startuml
+
+' Styles
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam rectangle {
+  BorderColor #2266AA
+  BackgroundColor #F0F8FF
+  shadowing false
+}
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #2266AA
+  ArrowColor #2266AA
+}
+ 
+' Core Entities
+class users {
+  Long id
+  String name
+  String email
+  String password
+  AccountType accountType
+  boolean enabled
+}
+
+class teachers {
+  Long id
+}
+
+class students {
+  Long id
+  StudentLevel studentLevel
+  int points
+}
+
+class subjects {
+  Long id
+  String name
+}
+
+class Streams {
+  Long id
+}
+
+class stream_type {
+  Long id
+  String namestream
+}
+
+class Years {
+  Long id
+  yearValue year
+  StudentLevel yearType
+}
+
+class substream {
+  long id
+  String namesubstream
+}
+
+class Courses {
+  Long id
+  String title
+  BigDecimal price
+  StudentLevel studentLevel
+  String description
+  LocalDateTime createdAt
+  LocalDateTime updatedAt
+  Boolean published
+  Integer completionPoints
+}
+
+class Lessons {
+  Long id
+  String title
+  String content
+  Integer orderNumber
+}
+
+class Ressources {
+  Long id
+  String videoUrl
+  String pdfUrl
+}
+
+class Quiz {
+  Long id
+  String title
+  String description
+  Integer totalpoints
+  QuizType quizType
+  Boolean showCorrectAnswers
+  LocalDateTime createdAt
+  Integer passingScore
+}
+
+class QuizQuestion {
+  Long id
+  String questionText
+  QuestionType questionType
+  Integer points
+  Integer orderNumber
+  String correctAnswer
+}
+
+class QuizAttempts {
+  Long id
+  AttemptStatus status
+  Integer scorePercent
+  Integer pointsAwarded
+  LocalDateTime startedAt
+  LocalDateTime submittedAt
+}
+
+class QuestionAnswer {
+  Long id
+  String givenAnswer
+  Boolean isCorrect
+  Integer pointsAwarded
+}
+
+class Enrollment {
+  Long id
+  Integer progressPercent
+  int pointsEarned
+  EnrollmentStatus status
+  LocalDateTime enrolledAt
+  LocalDateTime completedAt
+  LocalDateTime droppedAt
+  LocalDateTime lastAccessedAt
+  Integer dropCount
+}
+
+class StudentBadge {
+  Long id
+  LocalDateTime earnedAt
+  Integer bonusPointsAwarded
+}
+
+class Progress {
+  Long id
+  boolean completed
+  int score
+  LocalDateTime completedAt
+}
+
+class Points {
+  Long id
+  Integer points
+  Reason reason
+  String description
+  Long referenceId
+  LocalDateTime createdAt
+}
+
+class Badges {
+  Long id
+  String name
+  String description
+  String iconUrl
+  String code
+  BadgeTier tier
+  Integer bonusPoints
+  BadgeTrigger trigger
+  Integer pointsThreshold
+}
+
+class PlannerScheduleEntry {
+  id: Long
+  dayOfWeek: String
+  timeSlot: String
+  subject: String
+  topic: String
+  createdAt: LocalDateTime
+  updatedAt: LocalDateTime
+}
+
+class PlannerExam {
+  id: Long
+  subject: String
+  examDate: LocalDate
+  chapters: String
+  createdAt: LocalDateTime
+}
+
+class PlannerSession {
+  id: Long
+  dayOfWeek: String
+  timeSlot: String
+  subject: String
+  topic: String
+  completed: boolean
+  generated: boolean
+  createdAt: LocalDateTime
+  updatedAt: LocalDateTime
+}
+
+
+students "1" -- "0..*" PlannerScheduleEntry : student
+students "1" -- "0..*" PlannerExam : student
+students "1" -- "0..*" PlannerSession : student
+
+
+users "1" o-- "0..1" teachers : teacher
+users "1" o-- "0..1" students : student
+
+subjects "1" o-- "*" teachers : teachers
+subjects "1" o-- "*" Courses : courses
+
+teachers "*" --> "1" subjects : subject
+teachers "1" o-- "*" Courses : courses
+
+students "*" --> "1" substream : substream
+students "*" --> "1" Streams : streams
+students "1" o-- "*" Progress : progressList
+students "1" o-- "*" QuizAttempts : attempts
+students "1" o-- "*" StudentBadge : studentBadges
+students "1" o-- "*" Points : points
+
+Streams "1" o-- "0..1" stream_type : streamType
+Streams "1" o-- "1" Years : year
+Streams "1" o-- "*" students : students
+Streams "1" o-- "*" Courses : courses
+Streams "1" o-- "*" substream : substreams
+
+stream_type "1" o-- "*" Streams : streams
+Years "1" o-- "*" Streams : streams
+substream "1" o-- "*" students : students
+substream "*" --> "1" Streams : streams
+
+Courses "*" --> "1" subjects : subject
+Courses "*" --> "1" teachers : teacher
+Courses "*" --> "1" Streams : stream
+Courses "1" *-- "*" Lessons : lesson
+Courses "1" *-- "*" Enrollment : enrollments
+Courses "1" *-- "*" Quiz : quizzes
+Courses "1" *-- "*" StudentBadge : studentBadges
+
+Lessons "1" *-- "0..1" Ressources : resource
+Lessons "1" o-- "*" Quiz : quizzes
+
+Quiz "1" *-- "*" QuizQuestion : questions
+Quiz "1" *-- "*" QuizAttempts : attempts
+
+QuizAttempts "1" *-- "*" QuestionAnswer : answers
+QuizAttempts "*" --> "1" students : student
+QuizAttempts "*" --> "1" Quiz : quiz
+
+QuestionAnswer "*" --> "1" QuizAttempts : attempt
+QuestionAnswer "*" --> "1" QuizQuestion : question
+
+Enrollment "1" *-- "*" StudentBadge : badges
+Enrollment "*" --> "1" students : student
+Enrollment "*" --> "1" Courses : courses
+
+StudentBadge "*" --> "1" students : student
+StudentBadge "*" --> "1" Badges : badge
+StudentBadge "*" --> "0..1" Courses : course
+StudentBadge "*" --> "0..1" Enrollment : enrollment
+
+Badges "1" o-- "*" StudentBadge : studentBadges
+
+Progress "*" --> "1" students : student
+Progress "*" --> "1" Lessons : lesson
+
+Points "*" --> "1" students : student
+
+@enduml

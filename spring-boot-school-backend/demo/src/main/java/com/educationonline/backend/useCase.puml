@@ -1,0 +1,80 @@
+@startuml
+
+left to right direction
+skinparam shadowing true
+skinparam roundcorner 10
+skinparam actorStyle awesome
+skinparam Linetype ortho
+
+skinparam usecase {
+  BackgroundColor #E3F2FD
+  BorderColor #1E88E5
+  FontSize 13
+}
+
+skinparam actor {
+  BackgroundColor #BBDEFB
+  BorderColor #0D47A1
+}
+
+actor Student
+
+rectangle " Student Space" #F1F8FF {
+
+  package "Authentication" {
+    usecase "Register" as UC1
+    usecase "Login" as UC2
+  }
+
+  package "Learning" {
+    usecase "View Courses" as UC3
+    usecase "Enroll in Course" as UC4
+    usecase "Access Lessons" as UC5
+    usecase "Download Resources" as UC6
+  }
+
+  package "Evaluation" {
+    usecase "Take Quiz" as UC7
+    usecase "Submit Quiz" as UC8
+  }
+
+  package "Progress & Rewards" {
+    usecase "View Progress" as UC9
+    usecase "Earn Points" as UC10
+    usecase "Get Badges" as UC11
+  }
+
+   package "Planner (Schedule)" {
+    usecase "View Schedule" as UC12
+    usecase "View Sessions" as UC13
+    usecase "View Exams" as UC14
+  }
+
+}
+
+Student --> UC1
+Student --> UC2
+Student --> UC3
+Student --> UC4
+Student --> UC5
+Student --> UC6
+Student --> UC7
+Student --> UC9
+Student --> UC12
+
+' Relations
+UC4 -down-> UC2 : <<include>>
+UC5 -down-> UC2 : <<include>>
+UC7 -down-> UC2 : <<include>>
+UC7 -down-> UC8 : <<include>>
+UC9 -down-> UC2 : <<include>>
+
+UC12 -down-> UC2 : <<include>>   
+UC12 -down-> UC13 : <<include>>  
+UC12 -down-> UC14 : <<include>>
+
+
+UC8 .> UC10 : <<extend>>
+UC10 .> UC11 : <<extend>>
+
+@enduml
